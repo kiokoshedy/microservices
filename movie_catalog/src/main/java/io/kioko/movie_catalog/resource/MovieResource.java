@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.Arrays;
 import java.util.List;
@@ -23,8 +24,11 @@ public class MovieResource {
 
     private final RestTemplate restTemplate;
 
-    public MovieResource(RestTemplate restTemplate) {
+    private final WebClient.Builder webClientBuilder;
+
+    public MovieResource(RestTemplate restTemplate, WebClient.Builder webClientBuilder) {
         this.restTemplate = restTemplate;
+        this.webClientBuilder = webClientBuilder;
     }
 
     @GetMapping("/{userId}")
@@ -37,7 +41,15 @@ public class MovieResource {
         );
         return ratings.stream().map(rating -> {
                 Movie movie = restTemplate.getForObject("http://localhost:8001/movie/" + rating.getMovieId(), Movie.class);
-                return new Catalogue(movie.getMovieName(), "Action", rating.getRating());
+
+                    /*Movie movie = webClientBuilder.build()
+                           .get()
+                           .uri("http://localhost:8001/movie/" + rating.getMovieId())
+                           .retrieve()
+                           .bodyToMono(Movie.class)
+                           .block();*/
+
+                    return new Catalogue(movie.getMovieName(), "Action", rating.getRating());
         })
                 .collect(Collectors.toList());
 
